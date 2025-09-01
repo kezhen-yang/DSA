@@ -1,3 +1,2 @@
 # DSA
-# DSA
-### Data Structure and Algorithm Basics
+## Data Structure and Algorithm Basics
