@@ -1146,7 +1146,7 @@ def memoization(r, c, rows, cols, cache):
 
 print(memoization(0, 0, 4, 4, [[0] * 4 for i in range(4)]))
 
-# Dynamic Programming - Time: O(n * m), Space: O(m), where m is num of cols
+# Bottom up or Dynamic Programming - Time: O(n * m), Space: O(m), where m is num of cols
 def dp(rows, cols):
     prevRow = [0] * cols
 
