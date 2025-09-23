@@ -1187,3 +1187,82 @@ def countBits(n):
             count += 1
         n = n >> 1 # same as n // 2
     return count
+
+########################################################################
+############################ Kadane's Algorithm ########################
+########################################################################
+# Kadane's algorithm is a greedy/dynamic programming algorithm that can be used on an array. 
+# It is used to calculate the maximum sum subarray ending at a particular position and typically runs in O(n) time.
+
+# Brute Force: O(n^2)
+def bruteForce(nums):
+    maxSum = nums[0]
+
+    for i in range(len(nums)):
+        curSum = 0
+        for j in range(i, len(nums)):
+            curSum += nums[j]
+            maxSum = max(maxSum, curSum)
+    return maxSum
+
+# Kadane's Algorithm: O(n)
+def kadanes(nums):
+    maxSum = nums[0]
+    curSum = 0
+
+    for n in nums:
+        curSum = max(curSum, 0)
+        curSum += n
+        maxSum = max(maxSum, curSum)
+    return maxSum
+
+# Return the left and right index of the max subarray sum,
+# assuming there's exactly one result (no ties).
+# Sliding window variation of Kadane's: O(n)
+def slidingWindow(nums):
+    maxSum = nums[0]
+    curSum = 0
+    maxL, maxR = 0, 0
+    L = 0
+
+    for R in range(len(nums)):
+        if curSum < 0:
+            curSum = 0
+            L = R
+
+        curSum += nums[R]
+        if curSum > maxSum:
+            maxSum = curSum
+            maxL, maxR = L, R 
+
+    return [maxL, maxR]
+
+########################################################################
+############################ Sliding Window Fixed Size #################
+########################################################################
+# Having a fixed sliding window is to maintain two pointers that are k apart from each other and fit a certain constraint.
+
+def closeDuplicatesBruteForce(nums, k):
+    for L in range(len(nums)):
+        for R in range(L + 1, min(len(nums), L + k + 1)):
+            if nums[L] == nums[R]:
+                return True
+    return False
+
+# Same problem using sliding window. 
+# O(n)
+def closeDuplicates(nums, k):
+    window = set() # Cur window of size <= k 
+    L = 0 
+
+    for R in range(len(nums)):
+        if R - L + 1 > k:
+            window.remove(nums[L])
+            L += 1
+        if nums[R] in window:
+            return True
+        window.add(nums[R])
+
+    return False
+
+
