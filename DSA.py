@@ -1192,7 +1192,8 @@ def countBits(n):
 ############################ Kadane's Algorithm ########################
 ########################################################################
 # Kadane's algorithm is a greedy/dynamic programming algorithm that can be used on an array. 
-# It is used to calculate the maximum sum subarray ending at a particular position and typically runs in O(n) time.
+# It is used to calculate the maximum sum subarray ending at a particular position 
+# and typically runs in O(n) time.
 
 # Brute Force: O(n^2)
 def bruteForce(nums):
@@ -1240,7 +1241,8 @@ def slidingWindow(nums):
 ########################################################################
 ############################ Sliding Window Fixed Size #################
 ########################################################################
-# Having a fixed sliding window is to maintain two pointers that are k apart from each other and fit a certain constraint.
+# Having a fixed sliding window is to maintain two pointers that are k apart 
+# from each other and fit a certain constraint.
 
 def closeDuplicatesBruteForce(nums, k):
     for L in range(len(nums)):
@@ -1264,5 +1266,130 @@ def closeDuplicates(nums, k):
         window.add(nums[R])
 
     return False
+
+########################################################################
+############################ Sliding Window Variable Size ##############
+########################################################################
+# Another variation of the sliding window technique is the variable size sliding window. 
+# This is useful when we don't have a fixed window size and we need to keep expanding our 
+# window as long as our window meets a certain constraint.
+
+# Find the length of longest subarray with the same value in each position: O(n)
+def longestSubarray(nums):
+    length = 0 
+    L = 0
+
+    for R in range(len(nums)):
+        if nums[L] != nums[R]:
+            L = R
+        length = max(length, R - L + 1)
+    return length 
+
+# Find length of the minimum size subarray where the sum is 
+# greater than or equal to the target.
+# Assume all values in the input are positive.
+# O(n)
+def shortestSubarray(nums, target):
+    L, total = 0, 0
+    length = float("inf")
+    
+    for R in range(len(nums)):
+        total += nums[R]
+        while total >= target:
+            length = min(R - L + 1, length)
+            total -= nums[L]
+            L += 1
+    return 0 if length == float("inf") else length
+
+########################################################################
+############################ Two Pointers ##############################
+########################################################################
+
+# Given a string of characters, return true if it's a palindrome,
+# return false otherwise: O(n)
+def isPalindrome(word):
+    L, R = 0, len(word) - 1
+    while L < R:
+        if word[L] != word[R]:
+            return False
+        L += 1
+        R -= 1
+    return True
+
+# Given a sorted array of integers, return the indices
+# of two elements (in different positions) that sum up to
+# the target value. Assume there is exactly one solution.
+# O(n)
+def targetSum(nums, target):
+    L, R = 0, len(nums) - 1
+    while L < R:
+        if nums[L] + nums[R] > target:
+            R -= 1
+        elif nums[L] + nums[R] < target:
+            L += 1
+        else:
+            return [L, R]
+
+########################################################################
+############################ Prefix Sums ###############################
+########################################################################
+
+class PrefixSum:
+
+    def __init__(self, nums):
+        self.prefix = []
+        total = 0
+        for n in nums:
+            total += n
+            self.prefix.append(total)
+        
+    def rangeSum(self, left, right):
+        preRight = self.prefix[right]
+        preLeft = self.prefix[left - 1] if left > 0 else 0
+        return (preRight - preLeft)
+
+########################################################################
+######################### Fast and Slow Pointers #######################
+########################################################################
+
+# Find the middle of a linked list with two pointers.
+# Time: O(n), Space: O(1)
+def middleOfList(head):
+    slow, fast = head, head
+    while fast and fast.next:
+        slow = slow.next
+        fast = fast.next.next
+    return slow
+
+# Determine if the linked list contains a cycle.
+# Time: O(n), Space: O(1)
+def hasCycle(head):
+    slow, fast = head, head
+    while fast and fast.next:
+        slow = slow.next
+        fast = fast.next.next
+        if slow == fast:
+            return True
+    return False
+
+# Determine if the linked list contains a cycle and
+# return the beginning of the cycle, otherwise return null.
+# Time: O(n), Space: O(1)
+def cycleStart(head):
+    slow, fast = head, head
+    while fast and fast.next:
+        slow = slow.next
+        fast = fast.next.next
+        if slow == fast:
+            break
+
+    if not fast or not fast.next:
+        return None
+    
+    slow2 = head
+    while slow != slow2:
+        slow = slow.next
+        slow2 = slow2.next
+    return slow
 
 
