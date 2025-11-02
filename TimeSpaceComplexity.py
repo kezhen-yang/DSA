@@ -92,7 +92,8 @@ for i in range(len(nums)):
 # Idea is the same for binary search tree, at least if you BST is balanced. 
 # As you seach, we either go to the left of right and eliminate half of the remaining elements. 
 # Until we find the element we looking for. 
-# log(n) grows very slowly, so even for large n, log(n) is still a small number. The difference between log(n) and n is huge.
+# log(n) grows very slowly, so even for large n, log(n) is still a small number. 
+# The difference between log(n) and n is huge.
 
 # Binary Search
 nums = [1,2,3,4,5]

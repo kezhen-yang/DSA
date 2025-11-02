@@ -735,6 +735,31 @@ def leafPath(root, path):
 ########################################################################
 ############################ Heap Properties ###########################
 ########################################################################
+"""
+A heap is a specialized, tree-based data structure.
+
+It implements an abstract data type called the Priority Queue, but sometimes 'Heap' and 'Priority Queue' are used interchangeably.
+
+We already learned that queues operate with a first-in-first-out basis but with a priority queue, the values are removed based on a specific priority. The element with the highest priority is removed first, regardless of the order in which it was added.
+
+
+Two types of heaps
+1. Min Heap: Min heaps have the smallest value at the root node. The smallest value has the highest priority to be removed.
+2. Max Heap: Max heaps have the largest value at the root node. The largest value has the highest priority to be removed.
+
+
+Heap Properties
+For a binary tree to qualify as a heap, it must satisfy the following properties:
+
+1. Structure Property
+A binary heap is a binary tree that is a complete binary tree, where every single level of the tree is filled completely, except possibly the lowest level nodes, which are filled contiguously from left to right.
+
+2. Order Property
+The order property for a min-heap is that all of the descendents should be greater than their ancestors. In other words, if we have a root with value y, every node in the right and the left sub-tree should have values greater than or equal to y. This is a recursive property, similar to binary search trees.
+
+In a max-heap, every node in the right and the left sub-tree is smaller than or equal to y.
+
+"""
 
 # leftChild of i = heap[2 * i]
 # rightChild of i = heap[(2 * i) + 1] 
@@ -762,31 +787,32 @@ class Heap:
 
     def pop(self):
         if len(self.heap) == 1:
-            return None
+            return None # If our heap is empty, there is nothing to pop, hence the return null.
         if len(self.heap) == 2:
-            return self.heap.pop()
+            return self.heap.pop() # Our heap also could have just one node, in which case, we will just pop that node and don't need to make any adjustments.
 
-        res = self.heap[1]   
+        # If the above two statements have not executed, it must be the case that we have children, meaning we need to perform a swap.
+        res = self.heap[1] # We store our root node (min value in a min Heap) into a variable called res so that we don't lose it. 
         # Move last value to root
-        self.heap[1] = self.heap.pop()
+        self.heap[1] = self.heap.pop() # Then we can replace last node to be at the root node.
         i = 1
         # Percolate down
-        while 2 * i < len(self.heap):
+        while 2 * i < len(self.heap): # Our while loop runs as long as we have a left child and we determine this by making sure 2 * i is not out of bounds. Then, there are three cases we concern ourselves with:
             if (2 * i + 1 < len(self.heap) and 
             self.heap[2 * i + 1] < self.heap[2 * i] and 
-            self.heap[i] > self.heap[2 * i + 1]):
+            self.heap[i] > self.heap[2 * i + 1]): # The node has two children. We also make sure that the current node is greater than its children because of the order property. We replace the node with the minimum of its two children. When considering a binary heap, it is not possible to have only a right child because then it no longer is a complete binary tree and violates the structure property.
                 # Swap right child
                 tmp = self.heap[i]
                 self.heap[i] = self.heap[2 * i + 1]
                 self.heap[2 * i + 1] = tmp
                 i = 2 * i + 1
-            elif self.heap[i] > self.heap[2 * i]:
+            elif self.heap[i] > self.heap[2 * i]: # The node only has a left child. If no right child exists and the current node's value is greater than its left child, we swap it with the left child.
                 # Swap left child
                 tmp = self.heap[i]
                 self.heap[i] = self.heap[2 * i]
                 self.heap[2 * i] = tmp
                 i = 2 * i
-            else:
+            else: # If none of the above cases exectue, then it must be the case that our node is in the proper position already, satisfying both the order and the structural property.
                 break
         return res
 
@@ -1437,6 +1463,502 @@ class Trie:
 ############################ Union-Find ################################
 ########################################################################
 
+"""
+Union Find (Disjoint Sets)
+Union-Find is a useful tool for keeping track of nodes connected in a graph and detecting cycles in a graph. 
+Of course, we can achieve this with DFS as well by using a hashset, however this is only efficient when there is a static graph. 
+If we are adding edges overtime, that makes the graph dynamic, and Union-Find is a better choice.
+
+Disjoint sets
+Union-Find operates on disjoint sets. Let's briefly go over them.
+
+Disjoint sets are sets that don't have any element(s) in common. Formally, two disjoint sets are sets whose intersection is the empty set. 
+Suppose we have two sets, S1 = {1,2,3} and S2 = {4,5,6}. S1 and S2 are referred to as disjoint sets, while two sets, S3 = {1,2,5}, and S4 = {5,6,7} are not disjoint.
+
+Union-Find operates on disjoint sets. If we want to perform a union of two vertices, we need to ensure that those vertices belong to disjoint sets.
+"""
+
+class UnionFind:
+    def __init__(self, n):
+        self.par = {}
+        self.rank = {}
+
+        for i in range(1, n + 1):
+            self.par[i] = i
+            self.rank[i] = 0 # Every node starts with rank 0 (a tree of height 0 - just a single node).
+            # rank helps keep the tree structure balanced and shallow.
+
+    # Find parent of n, with path compression.
+    def find(self, n):
+        p = self.par[n]
+        while p != self.par[p]:
+            self.par[p] = self.par[self.par[p]]
+            p = self.par[p]
+        return p
+
+    # Union by height / rank.
+    # Return false if already connected, true otherwise.
+    def union(self, n1, n2):
+        p1, p2 = self.find(n1), self.find(n2)
+        if p1 == p2:
+            return False
+        
+        if self.rank[p1] > self.rank[p2]:
+            self.par[p2] = p1 # Attach shorter tree under taller tree
+        elif self.rank[p1] < self.rank[p2]:
+            self.par[p1] = p2 # Attach shorter tree under taller tree
+        else:
+            self.par[p1] = p2 # Same rank: attach either way
+            self.rank[p2] += 1 # Height increases by 1
+        return True
+
+########################################################################
+############################ Segment Tree ##############################
+########################################################################
+# A Segment Tree is a binary tree where each node represents a range 
+# and stores the sum of elements in that range. This allows us to: 
+# Update a single element in O(log N) time 
+# Query a range sum in O(log N) time
+
+class SegmentTree:
+    def __init__(self, total, L, R):
+        self.sum = total
+        self.left = None
+        self.right = None
+        self.L = L
+        self.R = R
+        
+    # O(n)
+    @staticmethod
+    def build(nums, L, R):
+        if L == R:
+            return SegmentTree(nums[L], L, R)
+
+        M = (L + R) // 2
+        root = SegmentTree(0, L, R)
+        root.left = SegmentTree.build(nums, L, M)
+        root.right = SegmentTree.build(nums, M + 1, R)
+        root.sum = root.left.sum + root.right.sum
+        return root
+
+    # O(logn)
+    def update(self, index, val):
+        if self.L == self.R:
+            self.sum = val
+            return
+        
+        M = (self.L + self.R) // 2
+        if index > M:
+            self.right.update(index, val)
+        else:
+            self.left.update(index, val)
+        self.sum = self.left.sum + self.right.sum
+        
+    # O(logn)
+    def rangeQuery(self, L, R):
+        if L == self.L and R == self.R:
+            return self.sum
+        
+        M = (self.L + self.R) // 2
+        if L > M:
+            return self.right.rangeQuery(L, R)
+        elif R <= M:
+            return self.left.rangeQuery(L, R)
+        else:
+            return (self.left.rangeQuery(L, M) +
+                    self.right.rangeQuery(M + 1, R))
+
+
+########################################################################
+############################ Iterative DFS #############################
+########################################################################
+
+# Definition for a binary tree node.
+class TreeNode:
+    def __init__(self, val, left, right):
+        self.val = val
+        self.left = left
+        self.right = right
+
+# Time and space: O(n)
+def inorder(root):
+    stack = []
+    curr = root
+
+    while curr or stack:
+        if curr:
+            stack.append(curr)
+            curr = curr.left
+        else:
+            curr = stack.pop()
+            print(curr.val)
+            curr = curr.right
+
+# Time and space: O(n)
+def preorder(root):
+    stack = []
+    curr = root
+    while curr or stack:
+        if curr:
+            print(curr.val)
+            if curr.right:
+                stack.append(curr.right)
+            curr = curr.left
+        else:
+            curr = stack.pop()
+
+# Time and space: O(n)
+def postorder(root):
+    stack = [root]
+    visit = [False]
+    while stack:
+        curr, visited = stack.pop(), visit.pop()
+        if curr:
+            if visited:
+                print(curr.val)
+            else:
+                stack.append(curr)
+                visit.append(True)
+                stack.append(curr.right)
+                visit.append(False)
+                stack.append(curr.left)
+                visit.append(False)
+
+
+########################################################################
+############################ Two Heaps #################################
+########################################################################
+
+"""
+Two Heaps Approach
+We will maintain a max-heap and a min-heap.
+
+1. In the max-heap, we store the smaller half of values from the stream.
+2. Conversely, in the min-heap, we store the larger half of values from the stream.
+
+To ensure each value goes in the correct heap and both heaps are roughly the same size, we might need to shift some elements around.
+
+1. The max-heap will store the smaller half of the values. Thus, the top of the max-heap will be the largest value in the smaller half.
+2. The min-heap will store the larger half of the values. Thus, the top of the min-heap will be the smallest value in the larger half.
+
+This would mean that the largest value in our max-heap will be smaller than the smallest value in our min-heap. Thus, the median can be calculated by just retrieving the min and the max values from our respective heaps.
+
+If the number of elements in our array is even, both of our heaps will have an equal number of elements. If we have an odd number of elements, one heap's size will be greater than the other. At any given iteration, the sizes of both heaps should only differ by at most 1 element.
+"""
+
+import heapq
+
+class Median:
+    def __init__(self):
+        self.small, self.large = [], []
+
+    def insert(self, num):
+        # Push to the max heap and swap with min heap if needed.
+        heapq.heappush(self.small, -1 * num) # python only has min heap, so we invert the values to simulate a max heap.
+        if (self.small and self.large and (-1 * self.small[0]) > self.large[0]): # make sure every num in small is <= every num in large
+            val = -1 * heapq.heappop(self.small)
+            heapq.heappush(self.large, val)
+        
+        # Handle uneven size
+        if len(self.small) > len(self.large) + 1:
+            val = -1 * heapq.heappop(self.small)
+            heapq.heappush(self.large, val)
+        if len(self.large) > len(self.small) + 1:
+            val = heapq.heappop(self.large)
+            heapq.heappush(self.small, -1 * val)
+        
+    def getMedian(self):
+        if len(self.small) > len(self.large):
+            return -1 * self.small[0]
+        elif len(self.large) > len(self.small):
+            return self.large[0]
+        
+        # Even # of elements, return avg of two middle nums
+        return (-1 * self.small[0] + self.large[0]) / 2
+
+
+########################################################################
+############################ Subsets ###################################
+########################################################################
+
+"""
+Formally, in mathematics, if we have two sets, Set A and Set B, Set A is a subset to Set B if all of its elements are found in Set B.
+
+Additionally, any set is a subset of itself and an empty set is a subset of every set. Order is not important in subsets, but the elements within a set must be distinct.
+
+For example, suppose we are given Set A = {1,2,3,4,5} and Set B = {5,2,1}. Set B is a subset of Set A because it only contain elements that can be found in Set A.
+
+Changing the order of Set B to {2,5,1} does not change the set itself, so it is still a subset of Set A.
+
+Given Set C = {9,10,11,12} and Set D = {6, 9, 10}, Set D is not a subset of Set C because it contains a 6, which Set C does not have.
+
+"""
+
+# Time: O(n * 2^n), Space: O(n)
+def subsetsWithoutDuplicates(nums):
+    subsets, curSet = [], []
+    helper(0, nums, curSet, subsets)
+    return subsets
+
+def helper(i, nums, curSet, subsets):
+    if i >= len(nums):
+        subsets.append(curSet.copy())
+        return
+    
+    # decision to include nums[i]
+    curSet.append(nums[i])
+    helper(i + 1, nums, curSet, subsets)
+    curSet.pop()
+
+    # decision NOT to include nums[i]
+    helper(i + 1, nums, curSet, subsets)
+
+
+# Time: O(n * 2^n), Space: O(n)
+def subsetsWithDuplicates(nums):
+    nums.sort()
+    subsets, curSet = [], []
+    helper2(0, nums, curSet, subsets)
+    return subsets
+
+def helper2(i, nums, curSet, subsets):
+    if i >= len(nums):
+        subsets.append(curSet.copy())
+        return
+    
+    # decision to include nums[i]
+    curSet.append(nums[i])
+    helper2(i + 1, nums, curSet, subsets)
+    curSet.pop()
+
+    # decision NOT to include nums[i]
+    while i + 1 < len(nums) and nums[i] == nums[i + 1]:
+        i += 1
+    helper2(i + 1, nums, curSet, subsets)
+
+
+########################################################################
+############################ Combinations ##############################
+########################################################################
+
+"""
+Combinations are very similar to subsets in that we are choosing elements from a set. The order the elements are placed in also does not matter.
+
+Generally, the main difference is that a combination is a subset of a specific size k, where k is a number that is less than or equal to the size of the original set.
+
+"""
+
+# Given n numbers (1 - n), return all possible combinations
+# of size k. (n choose k math problem).
+# Time: O(k * 2^n)
+def combinations(n, k):
+    combs = []
+    helper(1, [], combs, n, k)
+    return combs
+
+def helper(i, curComb, combs, n, k):
+    if len(curComb) == k:
+        combs.append(curComb.copy())
+        return
+    if i > n:
+        return
+    
+    # decision to include i
+    curComb.append(i)
+    helper(i + 1, curComb, combs, n, k)
+    curComb.pop()
+    
+    # decision to NOT include i
+    helper(i + 1, curComb, combs, n, k)
+
+
+# Time: O(k * C(n, k))
+def combinations2(n, k):
+    combs = []
+    helper2(1, [], combs, n, k)
+    return combs
+
+def helper2(i, curComb, combs, n, k):
+    if len(curComb) == k:
+        combs.append(curComb.copy())
+        return
+    if i > n:
+        return
+    
+    for j in range(i, n + 1):
+        curComb.append(j)
+        helper2(j + 1, curComb, combs, n, k)
+        curComb.pop()
+
+
+########################################################################
+############################ Permutations ##############################
+########################################################################
+
+"""
+We can take a permutation of a set of elements by creating an ordered arrangement of those elements.
+
+For example, a permutation from the set {1,2,3} could be {1,2,3} or {1,3,2} or {2,1,3}.
+
+Notice that the order of the elements is important in permutations. Unlike with combinations, we want to use all of the elements from the given set.
+"""
+
+# Time: O(n^2 * n!)
+def permutationsRecursive(nums):
+    return helper(0, nums)
+        
+def helper(i, nums):   
+    if i == len(nums):
+        return [[]]
+    
+    resPerms = []
+    perms = helper(i + 1, nums)
+    for p in perms:
+        for j in range(len(p) + 1):
+            pCopy = p.copy()
+            pCopy.insert(j, nums[i])
+            resPerms.append(pCopy)
+    return resPerms
+
+
+# Time: O(n^2 * n!)
+def permutationsIterative(nums):
+    perms = [[]]
+
+    for n in nums:
+        nextPerms = []
+        for p in perms:
+            for i in range(len(p) + 1):
+                pCopy = p.copy()
+                pCopy.insert(i, n)
+                nextPerms.append(pCopy)
+        perms = nextPerms
+    return perms
+
+
+########################################################################
+############################ Dijkstra's ################################
+########################################################################
+
+"""
+Having already covered BFS, we will now cover another shortest path algorithm - Dijkstra's algorithm. The downside of using BFS is that it only works when the graph is unweighted - i.e. where the default weight of each edge is 1.
+
+If we are given the following unweighted graph: edges = [[A,B], [A,C], [B,D], [C,B], [C,D], [C,E], [D,E]], and are asked to find the shortest path from A (source node) to D (destination node), we can apply classic BFS and keep adding the weights until we get to D.
+
+Because all the weights are the same, BFS gives the shortest path in terms of the amount of vertices we visit. However, this fails when we have different weights for different edges as shown below.
+
+"""
+
+import heapq
+
+# Given a connected graph represented by a list of edges, where
+# edge[0] = src, edge[1] = dst, and edge[2] = weight,
+# find the shortest path from src to every other node in the 
+# graph. There are n nodes in the graph.
+# O(E * logV), O(E * logE) is also correct.
+def shortestPath(edges, n, src):
+    adj = {}
+    for i in range(1, n + 1):
+        adj[i] = []
+        
+    # s = src, d = dst, w = weight
+    for s, d, w in edges:
+        adj[s].append([d, w])
+
+    shortest = {}
+    minHeap = [[0, src]]
+    while minHeap:
+        w1, n1 = heapq.heappop(minHeap)
+        if n1 in shortest:
+            continue
+        shortest[n1] = w1
+
+        for n2, w2 in adj[n1]:
+            if n2 not in shortest:
+                heapq.heappush(minHeap, [w1 + w2, n2])
+    return shortest
+
+
+########################################################################
+############################ Prim's ####################################
+########################################################################
+
+"""
+Prim's algorithm is used to find a spanning tree with the minimum cost. Similar to Dijkstra, Prim's is also a greedy algorithm and works on weighted undirected graphs.
+
+But, what is a spanning tree? If we are given a graph G, a spanning tree is a subset of edges from G where the total weight of the edges is minimized. So, it is similar to Dijkstra in the sense of minimizing the cost.
+
+Recall that by definition a tree is a connected graph, the same is true for a minimum spanning tree. However, a tree cannot have any cycles. This means that if G has n nodes, our minimum spanning tree will have at most n−1 edges.
+
+The idea: 
+G could have multiple valid minimum spanning trees with the same cost. So, given G, how do we go about finding the minimum spanning tree? 
+We will start with an empty spanning tree and and at each vertex, we pick the connected vertex with the smallest weight, among all of its neighboring vertices. 
+When we reach n−1 edges, we can stop our algorithm. In the visual below, for the MST, we start at vertex A, where the minimum cost of the connected component is 1 A->B, after which we have 2 B->C, which gives us n−1 edges and a minimum cost of 3. 
+The spanning tree at the bottom of the visual is another valid spanning tree but it is not a minimum cost spanning tree.
+
+"""
+
+import heapq
+
+# Given a list of edges of a connected undirected graph,
+# with nodes numbered from 1 to n,
+# return a list edges making up the minimum spanning tree.
+def minimumSpanningTree(edges, n):
+    adj = {}
+    for i in range(1, n + 1):
+        adj[i] = []
+    for n1, n2, weight in edges:
+        adj[n1].append([n2, weight])
+        adj[n2].append([n1, weight])
+
+    # Initialize the heap by choosing a single node
+    # (in this case 1) and pushing all its neighbors.
+    minHeap = []
+    for neighbor, weight in adj[1]:
+        heapq.heappush(minHeap, [weight, 1, neighbor])
+
+    mst = []
+    visit = set()
+    visit.add(1)
+    while len(visit) < n:
+        weight, n1, n2 = heapq.heappop(minHeap)
+        if n2 in visit:
+            continue
+
+        mst.append([n1, n2])
+        visit.add(n2)
+        for neighbor, weight in adj[n2]:
+            if neighbor not in visit:
+                heapq.heappush(minHeap, [weight, n2, neighbor])
+    return mst
+
+
+########################################################################
+############################ Kruskal's #################################
+########################################################################
+
+"""
+Kruskal's Minimum Spanning Tree Algorithm
+Kruskal's algorithm, similar to Prim's algorithm, is another algorithm for finding the minimum spanning tree in an undirected weighted graph. 
+Kruskal's is also a greedy algorithm that works better on sparse graphs. while Prim's works better on denser graphs.
+
+The idea
+Kruskal's algorithm works by sorting the edges in increasing (or rather non-decreasing) order of weights; 
+then, starting with an initially empty tree, considers all edges, and adds the edge with the minimum weight to our MST, if it does not result in a cycle. 
+Kruskal's will discard an edge if it results in a cycle.
+
+Cycle Detection
+Kruskal's makes use of the union-find data structure to detect if adding an edge would result in a cycle. 
+Recall that union-find data structure operates on disjoint sets. 
+It does so by keeping track of the parent of each vertex and if the two vertices we are trying to union have the same parent, 
+it returns false since there is a cycle.
+
+Of course, at any point there will be multiple valid spanning trees, which can occur if multiple edges have the same weight. 
+It does not really matter which one we pick as all of them will lead to the same cost. Although, the resultant tree might look different.
+"""
+
+import heapq 
+
 class UnionFind:
     def __init__(self, n):
         self.par = {}
@@ -1469,3 +1991,411 @@ class UnionFind:
             self.par[p1] = p2
             self.rank[p2] += 1
         return True
+
+# Given an list of edges of a connected undirected graph,
+# with nodes numbered from 1 to n,
+# return a list edges making up the minimum spanning tree.
+def minimumSpanningTree(edges, n):
+    minHeap = []
+    for n1, n2, weight in edges:
+        heapq.heappush(minHeap, [weight, n1, n2])
+
+    unionFind = UnionFind(n)
+    mst = []
+    while len(mst) < n - 1:
+        weight, n1, n2 = heapq.heappop(minHeap)
+        if not unionFind.union(n1, n2):
+            continue
+        mst.append([n1, n2])
+    return mst
+
+
+########################################################################
+############################ Topological Sort ##########################
+########################################################################
+
+"""
+The idea
+Topological sort is a way of sorting a directed acyclic graph (DAG) such that each node comes before its dependent nodes. 
+A simple example of this is university courses. 
+There are some courses that can be taken without any pre-requisites and then there are those that have pre-requisites, i.e. you cannot take them unless you have taken other courses first.
+
+In other words, some courses can be taken independent of other courses and others have to be taken in a specific order. 
+We can represent this scenario using a DAG, where the edges represent the dependencies between the courses.
+
+So, if we have node C and it has node A and B as its dependents, A and B will appear before C in the topological ordering. 
+What order they appear in is not important unless A and B also have a dependency on each other.
+"""
+
+# Given a directed acyclical graph, return a valid
+# topological ordering of the graph. 
+def topologicalSort(edges, n):
+    adj = {}
+    for i in range(1, n + 1):
+        adj[i] = []
+    for src, dst in edges:
+        adj[src].append(dst)
+
+    topSort = []
+    visit = set()
+    for i in range(1, n + 1):
+        dfs(i, adj, visit, topSort)
+    topSort.reverse()
+    return topSort
+
+def dfs(src, adj, visit, topSort):
+    if src in visit:
+        return
+    visit.add(src)
+    
+    for neighbor in adj[src]:
+        dfs(neighbor, adj, visit, topSort)
+    topSort.append(src)
+
+
+########################################################################
+############################ 0 / 1 Knapsack ############################
+########################################################################
+
+"""The idea
+Suppose we are given a bag/knapsack with a fixed capacity, along with some items' weights and profits we reap by choosing to put that item in the bag. 
+We want to maximize the profit while also ensuring that our backpack doesn't run out of space. 
+The reason this algorithm is called 0/1 is because at each point, we can either choose to include an item or not include it - a binary decision.
+"""
+
+# Given a list of N items, and a backpack with a
+# limited capacity, return the maximum total profit that 
+# can be contained in the backpack. The i-th item's profit
+# is profit[i] and it's weight is weight[i]. Assume you can
+# only add each item to the bag at most one time. 
+
+# Brute force Solution
+# Time: O(2^n), Space: O(n)
+# Where n is the number of items.
+def dfs(profit, weight, capacity):
+    return dfsHelper(0, profit, weight, capacity)
+
+def dfsHelper(i, profit, weight, capacity):
+    if i == len(profit):
+        return 0
+
+    # Skip item i
+    maxProfit = dfsHelper(i + 1, profit, weight, capacity)
+
+    # Include item i
+    newCap = capacity - weight[i]
+    if newCap >= 0:
+        p = profit[i] + dfsHelper(i + 1, profit, weight, newCap)
+        # Compute the max
+        maxProfit = max(maxProfit, p)
+
+    return maxProfit
+
+
+# Memoization Solution
+# Time: O(n * m), Space: O(n * m)
+# Where n is the number of items & m is the capacity.
+def memoization(profit, weight, capacity):
+    # A 2d array, with N rows and M + 1 columns, init with -1's
+    N, M = len(profit), capacity
+    cache = [[-1] * (M + 1) for _ in range(N)]
+    return memoHelper(0, profit, weight, capacity, cache)
+
+def memoHelper(i, profit, weight, capacity, cache):
+    if i == len(profit):
+        return 0
+    if cache[i][capacity] != -1:
+        return cache[i][capacity]
+
+    # Skip item i
+    cache[i][capacity] = memoHelper(i + 1, profit, weight, capacity, cache)
+    
+    # Include item i
+    newCap = capacity - weight[i]
+    if newCap >= 0:
+        p = profit[i] + memoHelper(i + 1, profit, weight, newCap, cache)
+        # Compute the max
+        cache[i][capacity] = max(cache[i][capacity], p)
+
+    return cache[i][capacity]
+
+
+# Dynamic Programming Solution
+# Time: O(n * m), Space: O(n * m)
+# Where n is the number of items & m is the capacity.
+def dp(profit, weight, capacity):
+    N, M = len(profit), capacity
+    dp = [[0] * (M + 1) for _ in range(N)]
+
+    # Fill the first column and row to reduce edge cases
+    for i in range(N):
+        dp[i][0] = 0
+    for c in range(M + 1):
+        if weight[0] <= c:
+            dp[0][c] = profit[0] 
+
+    for i in range(1, N):
+        for c in range(1, M + 1):
+            skip = dp[i-1][c]
+            include = 0
+            if c - weight[i] >= 0:
+                include = profit[i] + dp[i-1][c - weight[i]]
+            dp[i][c] = max(include, skip)
+    return dp[N-1][M]
+
+
+# Memory optimized Dynamic Programming Solution
+# Time: O(n * m), Space: O(m)
+def optimizedDp(profit, weight, capacity):
+    N, M = len(profit), capacity
+    dp = [0] * (M + 1)
+
+    # Fill the first row to reduce edge cases
+    for c in range(M + 1):
+        if weight[0] <= c:
+            dp[c] = profit[0] 
+
+    for i in range(1, N):
+        curRow = [0] * (M + 1)
+        for c in range(1, M + 1):
+            skip = dp[c]
+            include = 0
+            if c - weight[i] >= 0:
+                include = profit[i] + dp[c - weight[i]]
+            curRow[c] = max(include, skip)
+        dp = curRow
+    return dp[M]
+
+
+########################################################################
+############################ Unbounded Knapsack ########################
+########################################################################
+
+# Given a list of N items, and a backpack with a
+# limited capacity, return the maximum total profit that 
+# can be contained in the backpack. The i-th item's profit
+# is profit[i] and it's weight is weight[i]. Assume you can
+# have an unlimited number of each item available. 
+
+# Brute force Solution
+# Time: O(2^m), Space: O(m)
+# Where m is the capacity.
+def dfs(profit, weight, capacity):
+    return dfsHelper(0, profit, weight, capacity)
+
+def dfsHelper(i, profit, weight, capacity):
+    if i == len(profit):
+        return 0
+
+    # Skip item i
+    maxProfit = dfsHelper(i + 1, profit, weight, capacity)
+
+    # Include item i
+    newCap = capacity - weight[i]
+    if newCap >= 0:
+        p = profit[i] + dfsHelper(i, profit, weight, newCap)
+        # Compute the max
+        maxProfit = max(maxProfit, p)
+
+    return maxProfit
+
+
+# Memoization Solution
+# Time: O(n * m), Space: O(n * m)
+# Where n is the number of items & m is the capacity.
+def memoization(profit, weight, capacity):
+    # A 2d array, with N rows and M + 1 columns, init with -1's
+    N, M = len(profit), capacity
+    cache = [[-1] * (M + 1) for _ in range(N)]
+    return memoHelper(0, profit, weight, capacity, cache)
+
+def memoHelper(i, profit, weight, capacity, cache):
+    if i == len(profit):
+        return 0
+    if cache[i][capacity] != -1:
+        return cache[i][capacity]
+
+    # Skip item i
+    cache[i][capacity] = memoHelper(i + 1, profit, weight, capacity, cache)
+    
+    # Include item i
+    newCap = capacity - weight[i]
+    if newCap >= 0:
+        p = profit[i] + memoHelper(i, profit, weight, newCap, cache)
+        # Compute the max
+        cache[i][capacity] = max(cache[i][capacity], p)
+
+    return cache[i][capacity]
+
+
+# Dynamic Programming Solution
+# Time: O(n * m), Space: O(n * m)
+# Where n is the number of items & m is the capacity.
+def dp(profit, weight, capacity):
+    N, M = len(profit), capacity
+    dp = [[0] * (M + 1) for _ in range(N)]
+
+    # Fill the first column and row to reduce edge cases
+    for i in range(N):
+        dp[i][0] = 0
+    for c in range(M + 1):
+        if weight[0] <= c:
+            dp[0][c] = (c // weight[0]) * profit[0] 
+
+    for i in range(1, N):
+        for c in range(1, M + 1):
+            skip = dp[i-1][c]
+            include = 0
+            if c - weight[i] >= 0:
+                include = profit[i] + dp[i][c - weight[i]]
+            dp[i][c] = max(include, skip)
+    return dp[N-1][M]
+
+
+# Memory optimized Dynamic Programming Solution
+# Time: O(n * m), Space: O(m)
+def optimizedDp(profit, weight, capacity):
+    N, M = len(profit), capacity
+    dp = [0] * (M + 1)
+
+    for i in range(N):
+        curRow = [0] * (M + 1)
+        for c in range(1, M + 1):
+            skip = dp[c]
+            include = 0
+            if c - weight[i] >= 0:
+                include = profit[i] + curRow[c - weight[i]]
+            curRow[c] = max(include, skip)
+        dp = curRow
+    return dp[M]
+
+
+########################################################################
+############################ LCS #######################################
+########################################################################
+
+# Time: O(2^(n + m)), Space: O(n + m)
+def dfs(s1, s2):
+    return dfsHelper(s1, s2, 0, 0)
+
+def dfsHelper(s1, s2, i1, i2):
+    if i1 == len(s1) or i2 == len(s2):
+        return 0
+    
+    if s1[i1] == s2[i2]:
+        return 1 + dfsHelper(s1, s2, i1 + 1, i2 + 1)
+    else:
+        return max(dfsHelper(s1, s2, i1 + 1, i2),
+                dfsHelper(s1, s2, i1, i2 + 1))
+
+
+# Time: O(n * m), Space: O(n + m)
+def memoization(s1, s2):
+    N, M = len(s1), len(s2)
+    cache = [[-1] * M for _ in range(N)]
+    return memoHelper(s1, s2, 0, 0, cache)
+
+def memoHelper(s1, s2, i1, i2, cache):
+    if i1 == len(s1) or i2 == len(s2):
+        return 0
+    if cache[i1][i2] != -1:
+        return cache[i1][i2]
+
+    if s1[i1] == s2[i2]:
+        cache[i1][i2] = 1 + memoHelper(s1, s2, i1 + 1, i2 + 1, cache)
+    else:
+        cache[i1][i2] = max(memoHelper(s1, s2, i1 + 1, i2, cache),
+                memoHelper(s1, s2, i1, i2 + 1, cache))
+    return cache[i1][i2]
+
+
+# Time: O(n * m), Space: O(n + m)
+def dp(s1, s2):
+    N, M = len(s1), len(s2)
+    dp = [[0] * (M+1) for _ in range(N+1)]
+
+    for i in range(N):
+        for j in range(M):
+            if s1[i] == s2[j]:
+                dp[i+1][j+1] = 1 + dp[i][j]
+            else:
+                dp[i+1][j+1] = max(dp[i][j+1], dp[i+1][j])
+    return dp[N][M]
+
+
+# Time: O(n * m), Space: O(m)
+def optimizedDp(s1, s2):
+    N, M = len(s1), len(s2)
+    dp = [0] * (M + 1)
+
+    for i in range(N):
+        curRow = [0] * (M + 1)
+        for j in range(M):
+            if s1[i] == s2[j]:
+                curRow[j+1] = 1 + dp[j]
+            else:
+                curRow[j+1] = max(dp[j + 1], curRow[j])
+        dp = curRow
+    return dp[M]
+
+
+########################################################################
+############################ Palindromes ###############################
+########################################################################
+
+"""
+Palindromes
+Surprisingly, palindrome problems can also be solved with dynamic programming. Although the pattern by which they are solved is not the typical DFS/memoization/bottom-up approach. 
+
+Suppose we are faced with the following question:
+
+Q: Given a string S, return the length of the longest palindromic substring within S.
+A palindrome is a sequence of characters that read the same backwards as forwards. Think "racecar", or "aba". So, by definition, a palindromic substring is a contiguous part of a string that is a palindrome.
+
+We discussed how to determine whether a string is a palindrome in the two pointers lesson. However, here we are faced with a variation, i.e. finding the length of the longest palindromic substring.
+"""
+
+# Time: O(n^2), Space: O(n)
+def longest(s):
+    length = 0
+    
+    for i in range(len(s)):
+        # odd length
+        l, r = i, i
+        while l >= 0 and r < len(s) and s[l] == s[r]:
+            if (r - l + 1) > length:
+                length = r - l + 1
+            l -= 1
+            r += 1
+        
+        # even length
+        l, r = i, i + 1
+        while l >= 0 and r < len(s) and s[l] == s[r]:
+            if (r - l + 1) > length:
+                length = r - l + 1
+            l -= 1
+            r += 1
+            
+    return length
+
+
+# Same solution, without duplicate code.
+# Time: O(n^2), Space: O(n)
+def longest(s):
+    length = 0
+    for i in range(len(s)):
+        # odd length
+        length = max(length, helper(s, i, i))
+        
+        # even length
+        length = max(length, helper(s, i, i + 1)) 
+    return length
+
+def helper(s, l, r):
+    maxLength = 0
+    while l >= 0 and r < len(s) and s[l] == s[r]:
+        if (r - l + 1) > maxLength:
+            maxLength = r - l + 1
+        l -= 1
+        r += 1
+    return maxLength
